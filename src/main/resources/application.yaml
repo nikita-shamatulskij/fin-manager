@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: fin-manager
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/fin_manager
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
