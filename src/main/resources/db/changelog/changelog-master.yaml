@@ -4,3 +4,6 @@ databaseChangeLog:
 
   - include:
       file: db/changelog/migrations/create-wallets-table.yaml
+
+  - include:
+      file: db/changelog/migrations/create-transactions-table.yaml
