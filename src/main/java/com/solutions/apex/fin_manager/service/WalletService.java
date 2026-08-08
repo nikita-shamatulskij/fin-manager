@@ -54,4 +54,17 @@ public class WalletService {
 
         walletRepository.save(wallet);
     }
+
+    @Transactional
+    public void withdraw(Long walletId, BigDecimal amount){
+        Wallet wallet = walletRepository.findById(walletId).orElseThrow();
+
+        if (amount.compareTo(wallet.getBalance()) > 0){
+            throw new RuntimeException("Сумма списания больше баланса");
+        }
+
+        wallet.setBalance(wallet.getBalance().subtract(amount));
+
+        walletRepository.save(wallet);
+    }
 }

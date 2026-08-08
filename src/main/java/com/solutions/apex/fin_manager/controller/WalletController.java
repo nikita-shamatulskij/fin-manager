@@ -1,5 +1,6 @@
 package com.solutions.apex.fin_manager.controller;
 
+import com.solutions.apex.fin_manager.dto.WalletBalanceRequestDTO;
 import com.solutions.apex.fin_manager.dto.WalletCreateRequestDTO;
 import com.solutions.apex.fin_manager.dto.WalletResponseDTO;
 import com.solutions.apex.fin_manager.service.WalletService;
@@ -28,6 +29,14 @@ public class WalletController {
     @PatchMapping("/{id}/deposit")
     public ResponseEntity<Void> deposit(@PathVariable Long id, @RequestParam BigDecimal amount) {
         walletService.deposit(id, amount);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PatchMapping("/{id}/withdraw")
+    public ResponseEntity<Void> withdraw(@PathVariable Long id,
+                                         @RequestBody @Valid WalletBalanceRequestDTO requestDTO) {
+        walletService.withdraw(id, requestDTO.amount());
 
         return ResponseEntity.ok().build();
     }
