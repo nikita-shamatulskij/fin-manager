@@ -2,6 +2,10 @@ package com.solutions.apex.fin_manager.service;
 
 import com.solutions.apex.fin_manager.dto.WalletCreateRequestDTO;
 import com.solutions.apex.fin_manager.dto.WalletResponseDTO;
+import com.solutions.apex.fin_manager.exception.InsufficientFundsException;
+import com.solutions.apex.fin_manager.exception.InvalidAmountException;
+import com.solutions.apex.fin_manager.exception.UserNotFoundException;
+import com.solutions.apex.fin_manager.exception.WalletNotFoundException;
 import com.solutions.apex.fin_manager.mapper.WalletMapper;
 import com.solutions.apex.fin_manager.model.User;
 import com.solutions.apex.fin_manager.model.Wallet;
@@ -26,7 +30,7 @@ public class WalletService {
     public WalletResponseDTO createWallet(WalletCreateRequestDTO createRequestDTO){
 
         if (!userRepository.existsById(createRequestDTO.userId())){
-            throw new RuntimeException("Пользователь не найден");
+            throw new UserNotFoundException("Пользователь с ID: " + createRequestDTO.userId() + " не найден");
         }
 
         User userRef = userRepository.getReferenceById(createRequestDTO.userId());
@@ -44,10 +48,11 @@ public class WalletService {
 
     @Transactional
     public void deposit(Long walletId, BigDecimal amount){
-        Wallet wallet = walletRepository.findById(walletId).orElseThrow();
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new WalletNotFoundException("Кошелек с ID: " + walletId + " не найден"));
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new RuntimeException("Сумма пополнения должна быть больше нуля");
+            throw new InvalidAmountException("Сумма пополнения должна быть больше нуля");
         }
 
         wallet.setBalance(wallet.getBalance().add(amount));
@@ -57,10 +62,11 @@ public class WalletService {
 
     @Transactional
     public void withdraw(Long walletId, BigDecimal amount){
-        Wallet wallet = walletRepository.findById(walletId).orElseThrow();
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new WalletNotFoundException("Кошелек с ID: " + walletId + " не найден"));
 
         if (amount.compareTo(wallet.getBalance()) > 0){
-            throw new RuntimeException("Сумма списания больше баланса");
+            throw new InsufficientFundsException("Сумма списания больше баланса");
         }
 
         wallet.setBalance(wallet.getBalance().subtract(amount));

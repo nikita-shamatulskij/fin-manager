@@ -2,6 +2,9 @@ package com.solutions.apex.fin_manager.service;
 
 import com.solutions.apex.fin_manager.dto.TransactionCreateRequestDTO;
 import com.solutions.apex.fin_manager.dto.TransactionResponseDTO;
+import com.solutions.apex.fin_manager.exception.CurrencyMismatchException;
+import com.solutions.apex.fin_manager.exception.InsufficientFundsException;
+import com.solutions.apex.fin_manager.exception.WalletNotFoundException;
 import com.solutions.apex.fin_manager.mapper.TransactionMapper;
 import com.solutions.apex.fin_manager.model.Transaction;
 import com.solutions.apex.fin_manager.model.Wallet;
@@ -25,17 +28,17 @@ public class TransactionService {
     public TransactionResponseDTO transferMoney(TransactionCreateRequestDTO transactionCreateRequestDTO) {
 
         Wallet senderWallet = walletRepository.findById(transactionCreateRequestDTO.senderWalletId())
-                .orElseThrow(() -> new RuntimeException("Кошелек не найден"));
+                .orElseThrow(() -> new WalletNotFoundException("Кошелек с ID: " + transactionCreateRequestDTO.senderWalletId() + " не найден"));
 
         Wallet receiverWallet = walletRepository.findById(transactionCreateRequestDTO.receiverWalletId())
-                .orElseThrow(() -> new RuntimeException("Кошелек не найден"));
+                .orElseThrow(() -> new WalletNotFoundException("Кошелек с ID: " + transactionCreateRequestDTO.receiverWalletId() + " не найден"));
 
         if (!receiverWallet.getCurrency().equals(senderWallet.getCurrency())) {
-            throw new RuntimeException("Валюта кошелька отправителя и получателя не совпадают!");
+            throw new CurrencyMismatchException("Валюты кошельков не совпадают!");
         }
 
         if (senderWallet.getBalance().compareTo(transactionCreateRequestDTO.amount()) < 0) {
-            throw new RuntimeException("Недостаточно средств");
+            throw new InsufficientFundsException("Недостаточно средств");
         }
 
         BigDecimal amount = transactionCreateRequestDTO.amount();
