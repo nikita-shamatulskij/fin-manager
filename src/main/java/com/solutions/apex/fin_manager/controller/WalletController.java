@@ -2,6 +2,7 @@ package com.solutions.apex.fin_manager.controller;
 
 import com.solutions.apex.fin_manager.dto.WalletBalanceRequestDTO;
 import com.solutions.apex.fin_manager.dto.WalletCreateRequestDTO;
+import com.solutions.apex.fin_manager.dto.WalletExchangeRequestDTO;
 import com.solutions.apex.fin_manager.dto.WalletResponseDTO;
 import com.solutions.apex.fin_manager.service.WalletService;
 import jakarta.validation.Valid;
@@ -37,6 +38,13 @@ public class WalletController {
     public ResponseEntity<Void> withdraw(@PathVariable Long id,
                                          @RequestBody @Valid WalletBalanceRequestDTO requestDTO) {
         walletService.withdraw(id, requestDTO.amount());
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/exchange")
+    public ResponseEntity<Void> exchangeCurrency(@RequestBody @Valid WalletExchangeRequestDTO requestDTO) {
+        walletService.exchangeCurrency(requestDTO);
 
         return ResponseEntity.ok().build();
     }
