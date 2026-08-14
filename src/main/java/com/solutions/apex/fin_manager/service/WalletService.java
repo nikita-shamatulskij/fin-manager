@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 @Service
 @RequiredArgsConstructor
@@ -28,9 +27,9 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final UserRepository userRepository;
 
-    private final WalletMapper walletMapper;
+    private final CurrencyExchangeService exchangeService;
 
-    private final NbrbClient nbrbClient;
+    private final WalletMapper walletMapper;
 
     @Transactional
     public WalletResponseDTO createWallet(WalletCreateRequestDTO createRequestDTO){
@@ -97,35 +96,7 @@ public class WalletService {
         WalletCurrency senderCurrency = senderWallet.getCurrency();
         WalletCurrency receiverCurrency = receiverWallet.getCurrency();
 
-        if (!senderCurrency.name().equals("BYN") && receiverCurrency.name().equals("BYN")){
-            var rate = nbrbClient.getExchangeRate(senderCurrency.name());
-
-            targetAmount = exchangeDTO
-                    .amount()
-                    .multiply(rate.Cur_OfficialRate())
-                    .divide(BigDecimal.valueOf(rate.Cur_Scale()), 4, RoundingMode.HALF_UP);
-            
-        } else if (senderCurrency.name().equals("BYN") && !receiverCurrency.name().equals("BYN")) {
-            var rate = nbrbClient.getExchangeRate(receiverCurrency.name());
-
-            targetAmount = exchangeDTO
-                    .amount()
-                    .multiply(BigDecimal.valueOf(rate.Cur_Scale()))
-                    .divide(rate.Cur_OfficialRate(), 4, RoundingMode.HALF_UP);
-            
-        } else {
-            var senderRate = nbrbClient.getExchangeRate(senderWallet.getCurrency().name());
-            var receiverRate = nbrbClient.getExchangeRate(receiverWallet.getCurrency().name());
-
-            BigDecimal amountInByn = exchangeDTO
-                    .amount()
-                    .multiply(senderRate.Cur_OfficialRate())
-                    .divide(BigDecimal.valueOf(senderRate.Cur_Scale()), 4, RoundingMode.HALF_UP);
-
-            targetAmount = amountInByn
-                    .multiply(BigDecimal.valueOf(receiverRate.Cur_Scale()))
-                    .divide(receiverRate.Cur_OfficialRate(), 4, RoundingMode.HALF_UP);
-        }
+        targetAmount = exchangeService.convert(exchangeDTO.amount(), senderCurrency, receiverCurrency);
 
         senderWallet.setBalance(senderWallet.getBalance().subtract(exchangeDTO.amount()));
         receiverWallet.setBalance(receiverWallet.getBalance().add(targetAmount));
