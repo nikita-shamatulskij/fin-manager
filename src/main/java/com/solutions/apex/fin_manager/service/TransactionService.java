@@ -11,6 +11,8 @@ import com.solutions.apex.fin_manager.model.Wallet;
 import com.solutions.apex.fin_manager.repository.TransactionRepository;
 import com.solutions.apex.fin_manager.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,5 +57,17 @@ public class TransactionService {
         Transaction savedTransactional = transactionRepository.save(transaction);
 
         return transactionMapper.toDTO(savedTransactional);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TransactionResponseDTO> getWalletHistory(Long walletId, Pageable pageable){
+        if (!walletRepository.existsById(walletId)) {
+            throw new WalletNotFoundException("Кошелек с ID: " + walletId + " не найден");
+        }
+
+        Page<Transaction> transactions = transactionRepository
+                .findBySenderWalletIdOrReceiverWalletId(walletId, walletId, pageable);
+
+        return transactions.map(transactionMapper::toDTO);
     }
 }

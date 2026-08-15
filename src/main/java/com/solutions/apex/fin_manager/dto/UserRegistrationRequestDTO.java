@@ -14,7 +14,7 @@ public record UserRegistrationRequestDTO(
         String email,
 
         @NotBlank(message = "Пароль не может быть пустым")
-        @Size(min = 7, message = "Пароль должен быть не менее 6 символов")
+        @Size(min = 7, message = "Пароль должен быть не менее 7 символов")
         String password
 ) {
 }

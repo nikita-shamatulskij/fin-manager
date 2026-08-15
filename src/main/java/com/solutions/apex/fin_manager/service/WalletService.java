@@ -1,6 +1,5 @@
 package com.solutions.apex.fin_manager.service;
 
-import com.solutions.apex.fin_manager.client.NbrbClient;
 import com.solutions.apex.fin_manager.dto.WalletCreateRequestDTO;
 import com.solutions.apex.fin_manager.dto.WalletExchangeRequestDTO;
 import com.solutions.apex.fin_manager.dto.WalletResponseDTO;
@@ -19,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -49,6 +49,23 @@ public class WalletService {
         walletRepository.save(userWallet);
 
         return walletMapper.entityToDto(userWallet);
+    }
+
+    public WalletResponseDTO getWallet(Long walletId){
+        Wallet wallet = walletRepository.findById(walletId)
+                .orElseThrow(() -> new WalletNotFoundException("Кошелек с ID: " + walletId + " не найден"));
+
+        return walletMapper.entityToDto(wallet);
+    }
+
+    public List<WalletResponseDTO> getAllUserWallets(Long userId){
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException("Пользователь с ID: " + userId + " не найден");
+        }
+
+        List<Wallet> userWallets = walletRepository.findByUserId(userId);
+
+        return walletMapper.entityToDto(userWallets);
     }
 
     @Transactional
@@ -92,7 +109,7 @@ public class WalletService {
             throw new InsufficientFundsException("Недостаточно средств");
         }
 
-        BigDecimal targetAmount = BigDecimal.ZERO;
+        BigDecimal targetAmount;
         WalletCurrency senderCurrency = senderWallet.getCurrency();
         WalletCurrency receiverCurrency = receiverWallet.getCurrency();
 
