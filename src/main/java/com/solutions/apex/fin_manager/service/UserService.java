@@ -9,6 +9,9 @@ import com.solutions.apex.fin_manager.mapper.UserMapper;
 import com.solutions.apex.fin_manager.model.User;
 import com.solutions.apex.fin_manager.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public UserResponseDTO createUser(UserRegistrationRequestDTO userRegistrationRequestDTO) {
@@ -28,13 +32,19 @@ public class UserService {
             throw new UsernameAlreadyExistsException("Username: " + userRegistrationRequestDTO.username() + " уже занят!");
         }
 
-        User user = userMapper.toEntity(userRegistrationRequestDTO);
+         User user = User.builder()
+                 .username(userRegistrationRequestDTO.username())
+                 .email(userRegistrationRequestDTO.email())
+                 .passwordHash(passwordEncoder.encode(userRegistrationRequestDTO.password()))
+                 .build();
+
         user = userRepository.save(user);
 
         return userMapper.toDTO(user);
     }
 
     @Transactional(readOnly = true)
+    @PreAuthorize("hasRole('ADMIN')")
     public UserResponseDTO getUserById(Long id) {
         return userRepository.findById(id)
                 .map(userMapper::toDTO)
