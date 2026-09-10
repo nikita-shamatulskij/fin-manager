@@ -8,9 +8,11 @@ import com.solutions.apex.fin_manager.exception.InvalidAmountException;
 import com.solutions.apex.fin_manager.exception.UserNotFoundException;
 import com.solutions.apex.fin_manager.exception.WalletNotFoundException;
 import com.solutions.apex.fin_manager.mapper.WalletMapper;
+import com.solutions.apex.fin_manager.model.Transaction;
 import com.solutions.apex.fin_manager.model.User;
 import com.solutions.apex.fin_manager.model.Wallet;
 import com.solutions.apex.fin_manager.model.WalletCurrency;
+import com.solutions.apex.fin_manager.repository.TransactionRepository;
 import com.solutions.apex.fin_manager.repository.UserRepository;
 import com.solutions.apex.fin_manager.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -25,6 +28,7 @@ import java.util.List;
 public class WalletService {
 
     private final WalletRepository walletRepository;
+    private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
 
     private final CurrencyExchangeService exchangeService;
@@ -117,5 +121,15 @@ public class WalletService {
 
         senderWallet.setBalance(senderWallet.getBalance().subtract(exchangeDTO.amount()));
         receiverWallet.setBalance(receiverWallet.getBalance().add(targetAmount));
+
+        Transaction transaction = Transaction.builder()
+                .createdAt(LocalDateTime.now())
+                .amount(targetAmount)
+                .senderWallet(senderWallet)
+                .receiverWallet(receiverWallet)
+                .build();
+
+        transactionRepository.save(transaction);
+
     }
 }
